@@ -7,6 +7,7 @@ import (
 	"reflect"
 )
 
+// NewRequest return a new *http.Request
 func NewRequest(method, url string, opts ...RequestOption) (*http.Request, error) {
 	options := NewOptions()
 	for _, opt := range opts {
@@ -45,7 +46,13 @@ func NewRequest(method, url string, opts ...RequestOption) (*http.Request, error
 	}
 
 	// set queries
-	req.URL.RawQuery = options.Queries.Encode()
+	values := req.URL.Query()
+	for k, vs := range options.Queries {
+		for _, v := range vs {
+			values.Add(k, v)
+		}
+	}
+	req.URL.RawQuery = values.Encode()
 
 	// set cookies
 	for k, v := range options.Cookies {
@@ -55,38 +62,52 @@ func NewRequest(method, url string, opts ...RequestOption) (*http.Request, error
 	return req, nil
 }
 
+// Request sends an HTTP request and returns an HTTP response.
+func Request(method, url string, opts ...RequestOption) (*Response, error) {
+	return DefaultSession.Request(method, url, opts...)
+}
+
+// Get sends a GET request.
 func Get(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Head sends a HEAT request.
 func Head(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Post sends a POST request.
 func Post(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Put sends a PUT request.
 func Put(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Patch sends a PATCH request.
 func Patch(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Delete sends a DELETE request.
 func Delete(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Connect sends a CONNECT request.
 func Connect(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Options sends a OPTIONS request.
 func Options(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }
 
+// Trace sends a TRACE request.
 func Trace(url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Get(url, opts...)
 }

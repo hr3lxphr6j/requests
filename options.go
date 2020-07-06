@@ -14,16 +14,7 @@ import (
 	"time"
 )
 
-const (
-	HeaderContentType   = "Content-Type"
-	HeaderUserAgent     = "User-Agent"
-	HeaderReferer       = "Referer"
-	HeaderAuthorization = "Authorization"
-
-	ContentTypeJSON = "application/json"
-	ContentTypeForm = "application/x-www-form-urlencoded"
-)
-
+// RequestOptions is a collection of request options.
 type RequestOptions struct {
 	Headers  map[string]interface{}
 	Queries  url.Values
@@ -44,6 +35,7 @@ func (o *RequestOptions) getMultipartWriter() *multipart.Writer {
 	return o.multipartWriter
 }
 
+// NewOptions return a new *RequestOptions.
 func NewOptions() *RequestOptions {
 	return &RequestOptions{
 		Headers: map[string]interface{}{},
@@ -52,26 +44,34 @@ func NewOptions() *RequestOptions {
 	}
 }
 
+// RequestOption is used to update the fields in RequestOptions.
 type RequestOption func(o *RequestOptions)
 
+// Deadline set the deadline of this request.
 func Deadline(t time.Time) RequestOption {
 	return func(o *RequestOptions) {
 		o.Deadline = t
 	}
 }
 
+// Timeout set the timeout of this request.
 func Timeout(d time.Duration) RequestOption {
 	return func(o *RequestOptions) {
 		o.Deadline = time.Now().Add(d)
 	}
 }
 
+// Header sets the request's header, v can be a string, fmt.Stringer or nil,
+// when v is nil this header will be removed.
 func Header(k string, v interface{}) RequestOption {
 	return func(o *RequestOptions) {
 		o.Headers[k] = v
 	}
 }
 
+// Headers sets the request's headers, value of map be a string, fmt.Stringer or nil,
+// when v is nil this header will be removed.
+// If the replace flag is true, the existing header will be removed.
 func Headers(m map[string]interface{}, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
 		if len(replace) == 1 && replace[1] {
@@ -84,30 +84,36 @@ func Headers(m map[string]interface{}, replace ...bool) RequestOption {
 	}
 }
 
+// UserAgent sets the request's UserAgent header.
 func UserAgent(ua string) RequestOption {
 	return func(o *RequestOptions) {
 		Header(HeaderUserAgent, ua)(o)
 	}
 }
 
+// ContentType sets the request's ContentType header.
 func ContentType(ct string) RequestOption {
 	return func(o *RequestOptions) {
 		Header(HeaderContentType, ct)(o)
 	}
 }
 
+// Referer sets the request's Referer header.
 func Referer(r string) RequestOption {
 	return func(o *RequestOptions) {
 		Header(HeaderReferer, r)(o)
 	}
 }
 
+// Authorization sets the request's Authorization header.
 func Authorization(a string) RequestOption {
 	return func(o *RequestOptions) {
 		Header(HeaderAuthorization, a)(o)
 	}
 }
 
+// BasicAuth sets the request's Authorization header to use HTTP
+// Basic Authentication with the provided username and password.
 func BasicAuth(username, password string) RequestOption {
 	return func(o *RequestOptions) {
 		Authorization(base64.StdEncoding.EncodeToString(
@@ -115,12 +121,15 @@ func BasicAuth(username, password string) RequestOption {
 	}
 }
 
+// Cookie sets the request's cookie.
 func Cookie(k, v string) RequestOption {
 	return func(o *RequestOptions) {
 		o.Cookies[k] = v
 	}
 }
 
+// Cookies sets the request's cookies,
+// if the replace flag is true, the existing cookies will be removed.
 func Cookies(m map[string]string, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
 		if len(replace) == 1 && replace[1] {
@@ -133,12 +142,14 @@ func Cookies(m map[string]string, replace ...bool) RequestOption {
 	}
 }
 
+// Query sets the request's query.
 func Query(k, v string) RequestOption {
 	return func(o *RequestOptions) {
 		o.Queries.Set(k, v)
 	}
 }
 
+// Queries sets the request's queries.
 func Queries(m map[string]string, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
 		if len(replace) == 1 && replace[1] {
@@ -150,18 +161,22 @@ func Queries(m map[string]string, replace ...bool) RequestOption {
 	}
 }
 
+// QueriesFromValue sets the request's queries.
 func QueriesFromValue(v url.Values) RequestOption {
 	return func(o *RequestOptions) {
 		o.Queries = v
 	}
 }
 
+// Body sets the request's body.
 func Body(r io.Reader) RequestOption {
 	return func(o *RequestOptions) {
 		o.Body = r
 	}
 }
 
+// JSON marshal i to JSON format and sets it to request's body.
+// ContentType will set to ContentTypeJSON.
 func JSON(i interface{}) RequestOption {
 	return func(o *RequestOptions) {
 		ContentType(ContentTypeJSON)(o)
@@ -172,6 +187,8 @@ func JSON(i interface{}) RequestOption {
 	}
 }
 
+// Form sets m as form format of request's body.
+// ContentType will set to ContentTypeForm.
 func Form(m map[string]string) RequestOption {
 	return func(o *RequestOptions) {
 		ContentType(ContentTypeForm)(o)
@@ -183,6 +200,7 @@ func Form(m map[string]string) RequestOption {
 	}
 }
 
+// File build the body for a multipart/form-data request.
 func File(fieldName string, file *os.File) RequestOption {
 	return func(o *RequestOptions) {
 		mw := o.getMultipartWriter()
@@ -200,6 +218,7 @@ func File(fieldName string, file *os.File) RequestOption {
 	}
 }
 
+// MultipartFieldString build the body for a multipart/form-data request.
 func MultipartFieldString(fieldName, value string) RequestOption {
 	return func(o *RequestOptions) {
 		mw := o.getMultipartWriter()
@@ -211,6 +230,7 @@ func MultipartFieldString(fieldName, value string) RequestOption {
 	}
 }
 
+// MultipartField build the body for a multipart/form-data request.
 func MultipartField(fieldName string, r io.Reader) RequestOption {
 	return func(o *RequestOptions) {
 		mw := o.getMultipartWriter()
