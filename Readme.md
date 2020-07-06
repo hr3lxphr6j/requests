@@ -1,4 +1,17 @@
-package examples
+# Requests
+
+A "Requests" style HTTP client for golang
+
+## Install
+
+```shell
+go get -u github.com/hr3lxphr6j/requests
+```
+
+## Example
+
+```go
+package main
 
 import (
 	"fmt"
@@ -6,7 +19,7 @@ import (
 	"github.com/hr3lxphr6j/requests"
 )
 
-func JSONExample() {
+func main() {
 	resp, err := requests.Post("http://example.com",
 		requests.JSON(map[string]string{"foo": "bar"}),
 		requests.Query("foo", "bar"),
@@ -20,3 +33,8 @@ func JSONExample() {
 	}
 	fmt.Println(m)
 }
+```
+
+## TODO
+
+- [ ] Unit test
