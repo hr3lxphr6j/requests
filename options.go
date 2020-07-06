@@ -74,12 +74,12 @@ func Header(k string, v interface{}) RequestOption {
 // If the replace flag is true, the existing header will be removed.
 func Headers(m map[string]interface{}, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
-		if len(replace) == 1 && replace[1] {
+		if len(replace) == 1 && replace[0] {
 			o.Headers = m
 			return
 		}
 		for k, v := range m {
-			o.Headers[k] = v
+			Header(k, v)(o)
 		}
 	}
 }
@@ -116,8 +116,8 @@ func Authorization(a string) RequestOption {
 // Basic Authentication with the provided username and password.
 func BasicAuth(username, password string) RequestOption {
 	return func(o *RequestOptions) {
-		Authorization(base64.StdEncoding.EncodeToString(
-			[]byte(fmt.Sprintf("%s:%s", username, password))))
+		Authorization("Basic " + base64.StdEncoding.EncodeToString(
+			[]byte(fmt.Sprintf("%s:%s", username, password))))(o)
 	}
 }
 
@@ -132,7 +132,7 @@ func Cookie(k, v string) RequestOption {
 // if the replace flag is true, the existing cookies will be removed.
 func Cookies(m map[string]string, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
-		if len(replace) == 1 && replace[1] {
+		if len(replace) == 1 && replace[0] {
 			o.Cookies = m
 			return
 		}
@@ -152,7 +152,7 @@ func Query(k, v string) RequestOption {
 // Queries sets the request's queries.
 func Queries(m map[string]string, replace ...bool) RequestOption {
 	return func(o *RequestOptions) {
-		if len(replace) == 1 && replace[1] {
+		if len(replace) == 1 && replace[0] {
 			o.Queries = url.Values{}
 		}
 		for k, v := range m {
