@@ -38,7 +38,3 @@ func main() {
 	fmt.Println(m)
 }
 ```
-
-## TODO
-
-- [ ] Unit test

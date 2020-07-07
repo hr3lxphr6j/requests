@@ -38,5 +38,6 @@ func (r *Response) Text() (string, error) {
 
 // JSON unmarshal the response`s body as JSON.
 func (r *Response) JSON(i interface{}) error {
+	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(i)
 }

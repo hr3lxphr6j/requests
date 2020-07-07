@@ -74,40 +74,40 @@ func Get(url string, opts ...RequestOption) (*Response, error) {
 
 // Head sends a HEAT request.
 func Head(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Head(url, opts...)
 }
 
 // Post sends a POST request.
 func Post(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Post(url, opts...)
 }
 
 // Put sends a PUT request.
 func Put(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Put(url, opts...)
 }
 
 // Patch sends a PATCH request.
 func Patch(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Patch(url, opts...)
 }
 
 // Delete sends a DELETE request.
 func Delete(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Delete(url, opts...)
 }
 
 // Connect sends a CONNECT request.
 func Connect(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Connect(url, opts...)
 }
 
 // Options sends a OPTIONS request.
 func Options(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Options(url, opts...)
 }
 
 // Trace sends a TRACE request.
 func Trace(url string, opts ...RequestOption) (*Response, error) {
-	return DefaultSession.Get(url, opts...)
+	return DefaultSession.Trace(url, opts...)
 }

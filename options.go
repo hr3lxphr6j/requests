@@ -200,34 +200,27 @@ func Form(m map[string]string) RequestOption {
 	}
 }
 
-// File build the body for a multipart/form-data request.
-func File(fieldName string, file *os.File) RequestOption {
+// FileFromReader build the body for a multipart/form-data request.
+func FileFromReader(fieldName, fileName string, r io.Reader) RequestOption {
 	return func(o *RequestOptions) {
 		mw := o.getMultipartWriter()
-		w, err := mw.CreateFormFile(fieldName, filepath.Base(file.Name()))
+		w, err := mw.CreateFormFile(fieldName, fileName)
 		if err != nil {
-			o.Err = fmt.Errorf("file option error %w", err)
+			o.Err = fmt.Errorf("fileFromReader option error %w", err)
 			return
 		}
-		_, err = io.Copy(w, file)
+		_, err = io.Copy(w, r)
 		if err != nil {
-			o.Err = fmt.Errorf("file option error %w", err)
+			o.Err = fmt.Errorf("fileFromReader option error %w", err)
 			return
 		}
 		ContentType(mw.FormDataContentType())(o)
 	}
 }
 
-// MultipartFieldString build the body for a multipart/form-data request.
-func MultipartFieldString(fieldName, value string) RequestOption {
-	return func(o *RequestOptions) {
-		mw := o.getMultipartWriter()
-		if err := mw.WriteField(fieldName, value); err != nil {
-			o.Err = fmt.Errorf("multipartFieldString option error %w", err)
-			return
-		}
-		ContentType(mw.FormDataContentType())(o)
-	}
+// File build the body for a multipart/form-data request.
+func File(fieldName string, file *os.File) RequestOption {
+	return FileFromReader(fieldName, filepath.Base(file.Name()), file)
 }
 
 // MultipartField build the body for a multipart/form-data request.
@@ -246,4 +239,14 @@ func MultipartField(fieldName string, r io.Reader) RequestOption {
 		}
 		ContentType(mw.FormDataContentType())(o)
 	}
+}
+
+// MultipartFieldString build the body for a multipart/form-data request.
+func MultipartFieldString(fieldName, value string) RequestOption {
+	return MultipartField(fieldName, strings.NewReader(value))
+}
+
+// MultipartFieldBytes build the body for a multipart/form-data request.
+func MultipartFieldBytes(fieldName string, value []byte) RequestOption {
+	return MultipartField(fieldName, bytes.NewReader(value))
 }

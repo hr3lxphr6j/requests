@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -150,16 +151,16 @@ func TestCookie(t *testing.T) {
 
 func TestCookies(t *testing.T) {
 	req, err := NewRequest(http.MethodGet, "http://localhost",
-		Cookie("foo", "bar"),
+		Cookies(map[string]string{
+			"foo": "bar",
+		}),
 		Cookies(map[string]string{
 			"a": "b",
-			"c": "d",
 		}, true),
 	)
 	assert.NoError(t, err)
 	assert.EqualValues(t, []*http.Cookie{
 		{Name: "a", Value: "b"},
-		{Name: "c", Value: "d"},
 	}, req.Cookies())
 }
 
@@ -223,6 +224,11 @@ func TestJSON(t *testing.T) {
 	assert.EqualValues(t, m, _m)
 }
 
+func TestJSONWithBadValue(t *testing.T) {
+	_, err := NewRequest(http.MethodPost, "http://localhost", JSON(make(chan struct{})))
+	assert.Error(t, err)
+}
+
 func TestForm(t *testing.T) {
 	req, err := NewRequest(http.MethodPost, "http://localhost", Form(map[string]string{
 		"a": "b",
@@ -233,4 +239,47 @@ func TestForm(t *testing.T) {
 	b, err := ioutil.ReadAll(req.Body)
 	assert.NoError(t, err)
 	assert.Equal(t, "a=b&c=d", string(b))
+}
+
+func TestFile(t *testing.T) {
+	fileContent := []byte("foo\n")
+	hs := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		assert.True(t, strings.HasPrefix(request.Header.Get(HeaderContentType), "multipart/form-data"))
+		f, h, err := request.FormFile("file")
+		assert.NoError(t, err)
+		assert.True(t, strings.HasPrefix(h.Filename, "test"))
+		b, err := ioutil.ReadAll(f)
+		assert.NoError(t, err)
+		assert.Equal(t, fileContent, b)
+	}))
+	f, err := ioutil.TempFile("", "test")
+	assert.NoError(t, err)
+	defer os.Remove(f.Name()) // clean up
+	_, err = f.Write(fileContent)
+	assert.NoError(t, err)
+	assert.NoError(t, f.Sync())
+	_, err = f.Seek(0, 0)
+	assert.NoError(t, err)
+
+	_, err = Post(hs.URL, File("file", f))
+	assert.NoError(t, err)
+}
+
+func TestMultipartFieldString(t *testing.T) {
+	hs := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		assert.True(t, strings.HasPrefix(request.Header.Get(HeaderContentType), "multipart/form-data"))
+		assert.Equal(t, "bar", request.FormValue("foo"))
+	}))
+	_, err := Post(hs.URL, MultipartFieldString("foo", "bar"))
+	assert.NoError(t, err)
+}
+
+func TestMultipartFieldBytes(t *testing.T) {
+	content := []byte("bar")
+	hs := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		assert.True(t, strings.HasPrefix(request.Header.Get(HeaderContentType), "multipart/form-data"))
+		assert.EqualValues(t, content, request.FormValue("foo"))
+	}))
+	_, err := Post(hs.URL, MultipartFieldBytes("foo", content))
+	assert.NoError(t, err)
 }
