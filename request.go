@@ -62,6 +62,60 @@ func NewRequest(method, url string, opts ...RequestOption) (*http.Request, error
 	return req, nil
 }
 
+// NewRequestWithContext return a new *http.Request
+func NewRequestWithContext(ctx context.Context, method, url string, opts ...RequestOption) (*http.Request, error) {
+	options := NewOptions()
+	for _, opt := range opts {
+		opt(options)
+		if options.Err != nil {
+			return nil, options.Err
+		}
+	}
+	if options.multipartWriter != nil {
+		if err := options.multipartWriter.Close(); err != nil {
+			return nil, fmt.Errorf("write multipart error %w", err)
+		}
+	}
+
+	if !options.Deadline.IsZero() {
+		ctx, _ = context.WithDeadline(ctx, options.Deadline)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, url, options.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// set headers
+	for k, v := range options.Headers {
+		switch val := v.(type) {
+		case string:
+			req.Header.Set(k, val)
+		case fmt.Stringer:
+			req.Header.Set(k, val.String())
+		case nil:
+			req.Header.Del(k)
+		default:
+			return nil, fmt.Errorf("value of header [%s] must be string or nil, but %s", k, reflect.TypeOf(v))
+		}
+	}
+
+	// set queries
+	values := req.URL.Query()
+	for k, vs := range options.Queries {
+		for _, v := range vs {
+			values.Add(k, v)
+		}
+	}
+	req.URL.RawQuery = values.Encode()
+
+	// set cookies
+	for k, v := range options.Cookies {
+		req.AddCookie(&http.Cookie{Name: k, Value: v})
+	}
+
+	return req, nil
+}
+
 // Request sends an HTTP request and returns an HTTP response.
 func Request(method, url string, opts ...RequestOption) (*Response, error) {
 	return DefaultSession.Request(method, url, opts...)
