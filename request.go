@@ -12,6 +12,18 @@ func NewRequest(method, url string, opts ...RequestOption) (*http.Request, error
 	return NewRequestWithContext(context.Background(), method, url, opts...)
 }
 
+// Must is a helper that wraps a call to a function returning (*http.Request, error)
+// and panics if the error is non-nil. It is intended for use in variable
+// initialization such as:
+//
+//	var request = requests.Must(requests.NewRequest("POST", "http://example.com"))
+func Must(req *http.Request, err error) *http.Request {
+	if err != nil {
+		panic(err)
+	}
+	return req
+}
+
 // NewRequestWithContext return a new *http.Request
 func NewRequestWithContext(ctx context.Context, method, url string, opts ...RequestOption) (*http.Request, error) {
 	options := NewOptions()
